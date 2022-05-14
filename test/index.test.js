@@ -1,11 +1,11 @@
-const nock = require("nock");
+const nock = require("nock")
 // Requiring our app implementation
-const myProbotApp = require("..");
-const { Probot, ProbotOctokit } = require("probot");
+const myProbotApp = require("..")
+const { Probot, ProbotOctokit } = require("probot")
 // Requiring our fixtures
-const payload = require("./fixtures/pull_request.opened");
-const fs = require("fs");
-const path = require("path");
+const payload = require("./fixtures/pull_request.opened")
+const fs = require("fs")
+const path = require("path")
 
 const deployment = {
   ref: "hiimbex-patch-1",
@@ -19,7 +19,7 @@ const deployment = {
   description: "My Probot App's first deploy!",
   transient_environment: false,
   production_environment: true,
-};
+}
 
 const deploymentStatus = {
   state: "success",
@@ -27,18 +27,18 @@ const deploymentStatus = {
   description: "My Probot App set a deployment status!",
   environment_url: "https://example.com",
   auto_inactive: true,
-};
+}
 
 const privateKey = fs.readFileSync(
   path.join(__dirname, "fixtures/mock-cert.pem"),
   "utf-8"
-);
+)
 
 describe("My Probot app", () => {
-  let probot;
+  let probot
 
   beforeEach(() => {
-    nock.disableNetConnect();
+    nock.disableNetConnect()
     probot = new Probot({
       appId: 123,
       privateKey,
@@ -47,10 +47,10 @@ describe("My Probot app", () => {
         retry: { enabled: false },
         throttle: { enabled: false },
       }),
-    });
+    })
     // Load our app into probot
-    probot.load(myProbotApp);
-  });
+    probot.load(myProbotApp)
+  })
 
   test("creates a deployment and a deployment status", async () => {
     const mock = nock("https://api.github.com")
@@ -66,8 +66,8 @@ describe("My Probot app", () => {
 
       // Test that a deployment is created
       .post("/repos/hiimbex/testing-things/deployments", (body) => {
-        expect(body).toMatchObject(deployment);
-        return true;
+        expect(body).toMatchObject(deployment)
+        return true
       })
       .reply(200, { id: 123 })
 
@@ -75,23 +75,23 @@ describe("My Probot app", () => {
       .post(
         "/repos/hiimbex/testing-things/deployments/123/statuses",
         (body) => {
-          expect(body).toMatchObject(deploymentStatus);
-          return true;
+          expect(body).toMatchObject(deploymentStatus)
+          return true
         }
       )
-      .reply(200);
+      .reply(200)
 
     // Receive a webhook event
-    await probot.receive({ name: "pull_request", payload });
+    await probot.receive({ name: "pull_request", payload })
 
-    expect(mock.pendingMocks()).toStrictEqual([]);
-  });
+    expect(mock.pendingMocks()).toStrictEqual([])
+  })
 
   afterEach(() => {
-    nock.cleanAll();
-    nock.enableNetConnect();
-  });
-});
+    nock.cleanAll()
+    nock.enableNetConnect()
+  })
+})
 
 // For more information about testing with Jest see:
 // https://facebook.github.io/jest/
